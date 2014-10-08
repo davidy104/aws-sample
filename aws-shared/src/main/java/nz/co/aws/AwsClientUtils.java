@@ -2,11 +2,9 @@ package nz.co.aws;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +15,7 @@ public class AwsClientUtils {
 	public static final String FOLDER_SUFFIX = "/";
 
 	public static File writeTempFileToClasspath(String fileName,
-			InputStream inputStream) {
+			byte[] fileBytes) {
 		LOGGER.info("writeTempFileToClasspath start:{}", fileName);
 		String classpath = AwsClientUtils.class.getProtectionDomain()
 				.getCodeSource().getLocation().getPath();
@@ -36,8 +34,7 @@ public class AwsClientUtils {
 		if (tempFile != null) {
 			LOGGER.info("write content to tempFile start");
 			try {
-				byte[] content = IOUtils.toByteArray(inputStream);
-				FileUtils.writeByteArrayToFile(tempFile, content);
+				FileUtils.writeByteArrayToFile(tempFile, fileBytes);
 			} catch (IOException e) {
 				LOGGER.error("write file error", e);
 			}

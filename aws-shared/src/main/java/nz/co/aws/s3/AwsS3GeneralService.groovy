@@ -1,17 +1,13 @@
 package nz.co.aws.s3;
 
-import java.io.InputStream;
-import java.util.List;
 
-import nz.co.aws.FileStream;
+ interface AwsS3GeneralService {
 
-public interface AwsS3GeneralService {
+	void putAsset(String key, InputStream asset, String contentType)
 
-	void putAsset(String key, InputStream asset, String contentType);
+	List<String> getAssetList(String prefix)
 
-	List<String> getAssetList(String prefix);
+	AssetBean getAssetByName(String key)
 
-	FileStream getAssetByName(String key) throws Exception;
-
-	void deleteAssert(String key) throws Exception;
+	void deleteAssert(String key)
 }

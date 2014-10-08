@@ -1,107 +1,105 @@
-package nz.co.aws.s3;
+package nz.co.aws.s3.impl;
 
-import static nz.co.aws.AwsClientUtils.FOLDER_SUFFIX;
+import static nz.co.aws.AwsClientUtils.FOLDER_SUFFIX
+import groovy.util.logging.Slf4j
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import javax.annotation.Resource
 
-import javax.annotation.Resource;
+import nz.co.aws.AwsClientUtils
+import nz.co.aws.config.AwsConfigBean
+import nz.co.aws.s3.AssetBean
+import nz.co.aws.s3.AwsS3GeneralService
 
-import nz.co.aws.AwsClientUtils;
-import nz.co.aws.FileStream;
-import nz.co.aws.config.AwsConfigBean;
+import org.apache.commons.io.IOUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.GetObjectRequest
+import com.amazonaws.services.s3.model.ObjectListing
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.model.S3Object
+import com.amazonaws.services.s3.model.S3ObjectSummary
 
 @Service
-public class AwsS3GeneralServiceImpl implements AwsS3GeneralService {
-
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(AwsS3GeneralServiceImpl.class);
+@Slf4j
+class AwsS3GeneralServiceImpl implements AwsS3GeneralService {
 
 	@Resource
-	private AwsConfigBean awsConfigBean;
+	AwsConfigBean awsConfigBean
 
 	@Resource
-	private AmazonS3 amazonS3;
+	AmazonS3 amazonS3
 
 	@Override
-	public void putAsset(String key, InputStream asset, String contentType) {
-		LOGGER.info("putAsset start:{} ", key);
-		LOGGER.info("awsConfigBean: {} ",awsConfigBean);
-		if (asset != null) {
-			final ObjectMetadata meta = new ObjectMetadata();
-			meta.setContentLength(((ByteArrayInputStream) asset).available());
-			if (!StringUtils.isEmpty(contentType)) {
-				meta.setContentType(contentType);
-			}
-
-			amazonS3.putObject(new PutObjectRequest(awsConfigBean
-					.getBucketName(), key, asset, meta));
-
+	void putAsset(final String key,final InputStream asset,final String contentType) {
+		log.debug "putAsset start:{} $key"
+		log.debug "awsConfigBean: {} $awsConfigBean"
+		if (asset) {
 			try {
-				asset.close();
-			} catch (IOException e) {
-				LOGGER.error("stream close failed.", e);
+				ObjectMetadata meta = new ObjectMetadata()
+				meta.setContentLength(asset.available())
+				if (contentType) {
+					meta.setContentType(contentType)
+				}
+				amazonS3.putObject(new PutObjectRequest(awsConfigBean
+						.getBucketName(), key, asset, meta))
+			} catch (e) {
+				throw new RuntimeException(e)
+			}finally{
+				asset.close()
 			}
 		}
-
-		LOGGER.info("putAsset end ");
+		log.debug "putAsset end"
 	}
 
 	@Override
-	public List<String> getAssetList(String prefix) {
-		LOGGER.debug("getAssetList start:{} ", prefix);
-		final List<String> result = new ArrayList<>();
-		final ObjectListing objList = amazonS3.listObjects(
+	List<String> getAssetList(final String prefix) {
+		log.debug "getAssetList start:{} $prefix"
+		List<String> result = []
+		ObjectListing objList = amazonS3.listObjects(
 				awsConfigBean.getBucketName(),
-				AwsClientUtils.formatPath(prefix));
-		if (objList != null) {
-			for (final S3ObjectSummary summary : objList.getObjectSummaries()) {
+				AwsClientUtils.formatPath(prefix))
+		if (objList) {
+			for (S3ObjectSummary summary : objList.getObjectSummaries()) {
 				// ignore folders
 				if (!summary.getKey().endsWith(FOLDER_SUFFIX)) {
-					result.add(summary.getKey().substring(prefix.length()));
+					result << summary.getKey().substring(prefix.length())
 				}
 			}
 		}
-		LOGGER.debug("getAssetList end:{}", result.size());
-		return result;
+		log.debug "getAssetList end:{} ${result.size()}"
+		return result
 	}
 
 	@Override
-	public FileStream getAssetByName(String name) throws Exception {
-		LOGGER.debug("getAssetByName start:{}", name);
-		S3Object obj = null;
-
-		obj = amazonS3.getObject(new GetObjectRequest(awsConfigBean
-				.getBucketName(), name));
-
-		final FileStream result = FileStream.getBuilder(obj.getObjectContent(),
-				obj.getObjectMetadata().getContentLength()).build();
-
-		LOGGER.debug("getAssetByName end");
-		return result;
+	AssetBean getAssetByName(final String name) {
+		log.debug "getAssetByName start:{} $name"
+		S3Object obj
+		def result
+		try {
+			obj  = amazonS3.getObject(new GetObjectRequest(awsConfigBean
+					.getBucketName(), name))
+			if(obj){
+				InputStream contentIs = obj.getObjectContent()
+				byte[] cotentBytes = IOUtils.toByteArray(contentIs)
+				result = new AssetBean(bucketName:obj.bucketName,content:cotentBytes,key:obj.key,size:obj.getObjectMetadata().getContentLength())
+			}
+		} catch (e) {
+			throw new RuntimeException(e)
+		}finally{
+			if(obj){
+				obj.close()
+			}
+		}
+		return result
 	}
 
 	@Override
-	public void deleteAssert(String key) throws Exception {
-		LOGGER.debug("deleteAssert start:{}", key);
-		amazonS3.deleteObject(awsConfigBean.getBucketName(), key);
-		LOGGER.debug("deleteAssert end");
+	void deleteAssert(final String key) {
+		amazonS3.deleteObject(awsConfigBean.getBucketName(), key)
 	}
 
 }

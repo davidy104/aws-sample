@@ -1,107 +1,82 @@
-package nz.co.aws.sqs;
+package nz.co.aws.sqs.impl;
 
-import java.util.List;
-import java.util.Map;
+import groovy.util.logging.Slf4j
 
-import javax.annotation.Resource;
+import javax.annotation.Resource
 
-import nz.co.aws.config.AwsConfigBean;
+import nz.co.aws.config.AwsConfigBean
+import nz.co.aws.sqs.AwsSqsGeneralService
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
-import com.amazonaws.services.sqs.model.CreateQueueResult;
-import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
-import com.amazonaws.services.sqs.model.ListQueuesResult;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.amazonaws.services.sqs.AmazonSQS
+import com.amazonaws.services.sqs.model.CreateQueueRequest
+import com.amazonaws.services.sqs.model.CreateQueueResult
+import com.amazonaws.services.sqs.model.DeleteMessageRequest
+import com.amazonaws.services.sqs.model.GetQueueUrlRequest
+import com.amazonaws.services.sqs.model.Message
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import com.amazonaws.services.sqs.model.SendMessageRequest
 
 @Service
-public class AwsSqsGeneralServiceImpl implements AwsSqsGeneralService {
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(AwsSqsGeneralServiceImpl.class);
+@Slf4j
+class AwsSqsGeneralServiceImpl implements AwsSqsGeneralService {
 
 	@Resource
-	private AwsConfigBean awsConfigBean;
+	AwsConfigBean awsConfigBean
 
 	@Resource
-	private AmazonSQS amazonSqs;
+	AmazonSQS amazonSqs
 
 	@Override
-	public String createQueue(String queueName, Map<String, String> attributes) {
-		LOGGER.info("createQueue start:{} ", queueName);
+	String createQueue(final String queueName, final Map<String, String> attributes) {
+		log.info "createQueue start:{} $queueName"
 		CreateQueueRequest createQueueRequest = new CreateQueueRequest(
-				queueName);
-		if (attributes != null && attributes.size() > 0) {
-			createQueueRequest.setAttributes(attributes);
+				queueName)
+		if (attributes) {
+			createQueueRequest.attributes = attributes
 		}
 		CreateQueueResult createQueueResult = amazonSqs
-				.createQueue(createQueueRequest);
+				.createQueue(createQueueRequest)
 
-		LOGGER.info("createQueue end:{} ", createQueueResult);
-		return createQueueResult.getQueueUrl();
+		log.info "createQueue end:{} $createQueueResult"
+		return createQueueResult.queueUrl
 	}
 
 	@Override
-	public void deleteQueue(String queueUrl) {
-		LOGGER.info("deleteQueue start:{} ", queueUrl);
-		amazonSqs.deleteQueue(queueUrl);
-		LOGGER.info("deleteQueue end");
+	void deleteQueue(final String queueUrl) {
+		amazonSqs.deleteQueue(queueUrl)
 	}
 
 	@Override
-	public String getQueueUrl(String queueName) {
-		LOGGER.info("getQueueUrl start:{} ", queueName);
-		GetQueueUrlRequest getQueueUrlRequest = new GetQueueUrlRequest(
-				queueName);
-		return amazonSqs.getQueueUrl(getQueueUrlRequest).getQueueUrl();
+	String getQueueUrl(final String queueName) {
+		log.info "getQueueUrl start:{} $queueName"
+		return amazonSqs.getQueueUrl(new GetQueueUrlRequest(
+		queueName)).queueUrl
 	}
 
 	@Override
-	public List<String> listQueues() {
-		ListQueuesResult listQueuesResult = amazonSqs.listQueues();
-		if (listQueuesResult != null) {
-			return listQueuesResult.getQueueUrls();
-		}
-		return null;
+	List<String> listQueues() {
+		return amazonSqs.listQueues().queueUrls
 	}
 
 	@Override
-	public String sendMessageToQueue(String queueUrl, String message) {
-		LOGGER.info("sendMessageToQueue:{} ", queueUrl);
-		SendMessageResult messageResult = amazonSqs
-				.sendMessage(new SendMessageRequest(queueUrl, message));
-		
-		if (messageResult != null) {
-			LOGGER.info("sendMessageToQueue end:{} ", messageResult);
-			return messageResult.getMessageId();
-		}
-		return null;
+	String sendMessageToQueue(final String queueUrl,final String message) {
+		return amazonSqs
+		.sendMessage(new SendMessageRequest(queueUrl, message)).messageId
 	}
 
 	@Override
-	public List<Message> getMessagesFromQueue(String queueUrl) {
-		LOGGER.info("getMessagesFromQueue start:{} ", queueUrl);
-		ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(
-				queueUrl);
-		return amazonSqs.receiveMessage(receiveMessageRequest).getMessages();
+	List<Message> getMessagesFromQueue(final String queueUrl) {
+		return amazonSqs.receiveMessage(new ReceiveMessageRequest(
+		queueUrl)).messages
 	}
 
 	@Override
-	public void deleteMessageFromQueue(String queueUrl, Message message) {
-		LOGGER.info("deleteMessageFromQueue start:{} ", queueUrl);
-		LOGGER.info("message:{} ", message);
-		String messageRecieptHandle = message.getReceiptHandle();
-		LOGGER.info("message deleted:{} " + message.getBody() + "."
-				+ message.getReceiptHandle());
+	void deleteMessageFromQueue(final String queueUrl,final Message message) {
 		amazonSqs.deleteMessage(new DeleteMessageRequest(queueUrl,
-				messageRecieptHandle));
+				message.receiptHandle))
 	}
-
 }
