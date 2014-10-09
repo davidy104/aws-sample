@@ -10,7 +10,7 @@ import nz.co.aws.config.AwsConfigBean
 import nz.co.aws.s3.AssetBean
 import nz.co.aws.s3.AwsS3GeneralService
 
-import org.apache.commons.io.IOUtils
+import org.apache.commons.io.input.ProxyInputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -79,20 +79,18 @@ class AwsS3GeneralServiceImpl implements AwsS3GeneralService {
 		log.debug "getAssetByName start:{} $name"
 		S3Object obj
 		def result
-		try {
-			obj  = amazonS3.getObject(new GetObjectRequest(awsConfigBean
-					.getBucketName(), name))
-			if(obj){
-				InputStream contentIs = obj.getObjectContent()
-				byte[] cotentBytes = IOUtils.toByteArray(contentIs)
-				result = new AssetBean(bucketName:obj.bucketName,content:cotentBytes,key:obj.key,size:obj.getObjectMetadata().getContentLength())
-			}
-		} catch (e) {
-			throw new RuntimeException(e)
-		}finally{
-			if(obj){
-				obj.close()
-			}
+		obj  = amazonS3.getObject(new GetObjectRequest(awsConfigBean
+				.getBucketName(), name))
+		if(obj){
+			result = new AssetBean(bucketName:obj.bucketName,key:obj.key,size:obj.getObjectMetadata().getContentLength())
+			ProxyInputStream contentIs = new ProxyInputStream(obj.getObjectContent()) {
+						@Override
+						void close() {
+							super.close()
+							obj.close()
+						}
+					}
+			result.content = contentIs
 		}
 		return result
 	}

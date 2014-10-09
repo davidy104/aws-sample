@@ -35,7 +35,7 @@ class AwsS3ClientIntegrationTest {
 	void setUp(){
 		testFileStream = AwsS3ClientIntegrationTest.class.getResourceAsStream("/images/james.jpg")
 	}
-	
+
 	@Test
 	void testCrd() {
 		awsS3GeneralService.putAsset(TEST_ADD_ASSET_KEY, testFileStream, "image/jpeg")
@@ -44,13 +44,10 @@ class AwsS3ClientIntegrationTest {
 		log.info "found asset: {} $asset"
 
 		File downloadFile = new File(com.google.common.io.Files.createTempDir(), TEST_DOWNLOAD_FILE_NAME);
-		FileUtils.writeByteArrayToFile(downloadFile, asset.getContent())
+		//		FileUtils.writeByteArrayToFile(downloadFile, asset.getContent())
+		FileUtils.copyInputStreamToFile(asset.getContent(), downloadFile)
 
 		log.info "localClasspathImagePath:{} ${downloadFile.getAbsolutePath()}"
 		awsS3GeneralService.deleteAssert(TEST_ADD_ASSET_KEY)
 	}
-	
-	
-	
-	
 }

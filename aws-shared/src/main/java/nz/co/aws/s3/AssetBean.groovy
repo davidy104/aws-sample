@@ -6,6 +6,6 @@ import groovy.transform.ToString
 class AssetBean {
 	String bucketName
 	String key
-	byte[] content
+	InputStream content
 	long size
 }
