@@ -6,3 +6,4 @@ target
 bin
 .metadata
 aws.properties
+mail.properties
