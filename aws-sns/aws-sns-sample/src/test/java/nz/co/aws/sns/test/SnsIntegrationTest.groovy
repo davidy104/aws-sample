@@ -25,6 +25,8 @@ class SnsIntegrationTest {
 	static final String TEST_TOPIC_ARN="arn:aws:sns:ap-southeast-2:654628234242:jysnstopic01"
 	static final String TEST_EMAIL_ENDPOINT="david.yuan@propellerhead.co.nz"
 	static final String TEST_MESSAGE="this is a test message from SNS"
+	
+	static final String TEST_HTTP_ENDPOINT="http://localhost:8111/snshttp/v1"
 
 	@Resource
 	AwsSNSGeneralService awsSNSGeneralService
@@ -32,6 +34,17 @@ class SnsIntegrationTest {
 	@Test
 	void testSendMessageToEmail() {
 		String subscriptionArn = awsSNSGeneralService.subscribeTopic(TEST_TOPIC_ARN, "email", TEST_EMAIL_ENDPOINT)
+		assertNotNull(subscriptionArn)
+		log.info "subscriptionArn: {} $subscriptionArn"
+		String messageId = awsSNSGeneralService.publishTopic(TEST_TOPIC_ARN, TEST_MESSAGE)
+		assertNotNull(messageId)
+		log.info "messageId: {} $messageId"
+	}
+	
+	
+	@Test
+	void testSendMessageToHttp() {
+		String subscriptionArn = awsSNSGeneralService.subscribeTopic(TEST_TOPIC_ARN, "http", TEST_HTTP_ENDPOINT)
 		assertNotNull(subscriptionArn)
 		log.info "subscriptionArn: {} $subscriptionArn"
 		String messageId = awsSNSGeneralService.publishTopic(TEST_TOPIC_ARN, TEST_MESSAGE)

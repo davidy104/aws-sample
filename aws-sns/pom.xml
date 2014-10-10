@@ -13,5 +13,6 @@
   <modules>
     <module>aws-sns-sample</module>
     <module>aws-sns-emailendpoint</module>
+    <module>aws-sns-httpendpoint</module>
   </modules>
 </project>
