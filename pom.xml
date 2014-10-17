@@ -26,6 +26,10 @@
 		<commons-lang3.version>3.3.2</commons-lang3.version>
 		<jersey.version>1.18.1</jersey.version>
 		<guava.version>18.0</guava.version>
+		<sanselan.version>0.97-incubator</sanselan.version>
+		<imgscalr.version>4.2</imgscalr.version>
+		<imageio.version>3.0-rc5</imageio.version>
+		<jai-imageio-core-standalone.version>1.2-pre-dr-b04-2013-04-23</jai-imageio-core-standalone.version>
 	</properties>
 
 	<dependencyManagement>
@@ -212,6 +216,11 @@
 				<artifactId>camel-mail</artifactId>
 				<version>${camel.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache-extras.camel-extra</groupId>
+				<artifactId>camel-jcifs</artifactId>
+				<version>${camel.version}</version>
+			</dependency>
 			<!-- jersey dependencies -->
 			<dependency>
 				<groupId>com.sun.jersey</groupId>
@@ -325,6 +334,36 @@
 				<version>3.0.1</version>
 				<scope>provided</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.imgscalr</groupId>
+				<artifactId>imgscalr-lib</artifactId>
+				<version>${imgscalr.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.sanselan</groupId>
+				<artifactId>sanselan</artifactId>
+				<version>${sanselan.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.twelvemonkeys.imageio</groupId>
+				<artifactId>imageio-jpeg</artifactId>
+				<version>${imageio.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.twelvemonkeys.imageio</groupId>
+				<artifactId>imageio-tiff</artifactId>
+				<version>${imageio.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.java.dev.jai-imageio</groupId>
+				<artifactId>jai-imageio-core-standalone</artifactId>
+				<version>${jai-imageio-core-standalone.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.sanselan</groupId>
+				<artifactId>sanselan</artifactId>
+				<version>${sanselan.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<build>
@@ -381,5 +420,6 @@
 		<module>aws-sqs-sample</module>
 		<module>aws-sns-sample</module>
 		<module>aws-sns</module>
+		<module>aws-s3-image</module>
 	</modules>
 </project>
