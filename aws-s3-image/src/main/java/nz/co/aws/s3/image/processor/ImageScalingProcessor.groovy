@@ -23,12 +23,18 @@ import org.springframework.stereotype.Component
 class ImageScalingProcessor implements Processor {
 	@Override
 	void process(Exchange exchange)  {
+		log.info "ImageScalingProcessor start..."
 		byte[] imageBytes = exchange.getProperty("imageBytes")
 		String imageExtension = exchange.getProperty('imageExtension')
 		ImageScalingConfig imageScalingConfig = exchange.in.getBody()
 		String fileName = imageScalingConfig.name + "."+imageExtension
+		log.info "fileName:{} $fileName"
 		exchange.setProperty('imageName', fileName)
+		exchange.setProperty('outputEndpoint', imageScalingConfig.outputEndpoint)
+		exchange.setProperty('outputPath', imageScalingConfig.outputPath)
+
 		InputStream imageInputStream= new ByteArrayInputStream(imageBytes)
+
 		if(imageScalingConfig.name != 'original'){
 			BufferedImage img = ImageIO.read(imageInputStream)
 			final BufferedImage bufferedImage = Scalr.resize(img,
@@ -42,6 +48,7 @@ class ImageScalingProcessor implements Processor {
 			ImageIO.write(bufferedImage, imageExtension, output)
 			imageInputStream = new ByteArrayInputStream(
 					output.toByteArray(), 0, output.size())
+			exchange.setProperty('contentLength', imageInputStream.available())
 		}
 
 		exchange.in.setBody(new ProxyInputStream(imageInputStream) {
@@ -50,5 +57,7 @@ class ImageScalingProcessor implements Processor {
 						super.close()
 					}
 				}, InputStream.class)
+
+		log.info "ImageScalingProcessor end..."
 	}
 }

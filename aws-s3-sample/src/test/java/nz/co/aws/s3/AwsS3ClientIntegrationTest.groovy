@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j
 
 import javax.annotation.Resource
 
+import nz.co.aws.config.AwsConfigBean
 import nz.co.aws.s3.config.ApplicationContextConfig
 
 import org.apache.commons.io.FileUtils
@@ -30,10 +31,14 @@ class AwsS3ClientIntegrationTest {
 	static final String TEST_ADD_ASSET_KEY = "image/james.jpg"
 
 	InputStream testFileStream
+	
+	@Resource
+	AwsConfigBean awsConfigBean
 
 	@Before
 	void setUp(){
 		testFileStream = AwsS3ClientIntegrationTest.class.getResourceAsStream("/images/james.jpg")
+		log.info "awsConfigBean:{} ${awsConfigBean}"
 	}
 
 	@Test

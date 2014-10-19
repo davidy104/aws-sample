@@ -9,4 +9,6 @@ class ImageScalingConfig implements Serializable{
 	String name
 	Integer width
 	Integer height
+	String outputPath
+	String outputEndpoint='file'
 }

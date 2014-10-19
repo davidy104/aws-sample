@@ -9,22 +9,6 @@
 <!-- -->
 <configuration>
 	<contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
-	<appender name="CATALINA"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
-		<!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy -->
-		<!--for further documentation -->
-		<File>${catalina.home}/logs/catalina.log</File>
-		<Append>true</Append>
-		<encoder>
-			<pattern>%d [%5p] [%15.15t] %30.30c : %m%n</pattern>
-		</encoder>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${catalina.home}/logs/catalina.log.%d{yyyy-MM-dd}
-			</fileNamePattern>
-		</rollingPolicy>
-	</appender>
-
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n

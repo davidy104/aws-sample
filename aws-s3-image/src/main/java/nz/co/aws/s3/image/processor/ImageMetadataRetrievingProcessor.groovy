@@ -19,12 +19,15 @@ class ImageMetadataRetrievingProcessor implements Processor {
 
 	@Override
 	void process(Exchange exchange) {
-		log.debug 'ImageMetadataRetrievingProcessor start'
+		log.info 'ImageMetadataRetrievingProcessor start...'
 		ImageRequest imageRequest = exchange.in.getBody(ImageRequest.class)
 		def metadataMap = [:]
 		File image = imageRequest.imageFile
 		exchange.setProperty("imageBytes", FileUtils.readFileToByteArray(image))
 		exchange.setProperty("imageExtension", FilenameUtils.getExtension(image.getAbsolutePath()))
+		
+		String fileName = FilenameUtils.getName(image.getAbsolutePath())
+		log.info "fileName: {} $fileName" 
 
 		InputStream imageStream = FileUtils.openInputStream(image)
 		final IImageMetadata metadata = Sanselan.getMetadata(new ProxyInputStream(imageStream) {
@@ -32,7 +35,7 @@ class ImageMetadataRetrievingProcessor implements Processor {
 					public void close() throws IOException {
 						super.close()
 					}
-				},imageRequest.imageName)
+				},fileName)
 		if(metadata) {
 			metadata.getItems().each{
 				Item item = (Item)it
@@ -40,6 +43,6 @@ class ImageMetadataRetrievingProcessor implements Processor {
 			}
 		}
 		exchange.in.setBody(metadataMap, Map.class)
-		log.debug 'ImageMetadataRetrievingProcessor end'
+		log.info 'ImageMetadataRetrievingProcessor end...'
 	}
 }
