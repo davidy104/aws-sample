@@ -2,12 +2,19 @@ package nz.co.aws.s3.image.test;
 
 import static org.junit.Assert.*
 import groovy.util.logging.Slf4j
+
+import javax.annotation.Resource
+
+import nz.co.aws.config.AwsConfigBean
 import nz.co.aws.s3.image.ImageRequest
 import nz.co.aws.s3.image.ImageScalingConfig
 import nz.co.aws.s3.image.config.ApplicationContextConfig
 
+import org.apache.camel.CamelContext
+import org.apache.camel.ConsumerTemplate
 import org.apache.camel.EndpointInject
 import org.apache.camel.Exchange
+import org.apache.camel.Message
 import org.apache.camel.Produce
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
@@ -29,12 +36,19 @@ class ImageRouteTest {
 
 	@EndpointInject(uri = "mock:afterRetrieve")
 	MockEndpoint mockAfterRetrieve
-	
+
 	@EndpointInject(uri = "mock:beforeScaling")
 	MockEndpoint mockBeforeScaling
-	
+
 	@EndpointInject(uri = "mock:beforeS3Endpoint")
 	MockEndpoint mockBeforeS3Endpoint
+
+	@Resource
+	CamelContext camelContext
+	@Resource
+	AwsConfigBean awsConfigBean
+
+	String testKey = "image/standard.jpg"
 
 	@Before
 	void setUp(){
@@ -65,18 +79,29 @@ class ImageRouteTest {
 				.getProperties().get('imageExtension')
 		assertNotNull(imageExtension)
 		log.info "imageExtension: {} $imageExtension"
-		
-		
+
+
 		List<Exchange> exchanges = mockBeforeScaling.getExchanges()
 		log.info "exchanges size: {} ${exchanges.size()}"
 		exchanges.each {
 			def body = it.getIn().getBody()
-			println "transfrom: {} $body" 
+			println "transfrom: {} $body"
 		}
-		
+
 		Map headers = mockBeforeS3Endpoint.getExchanges().get(0).getIn().getHeaders()
 		headers.each {k,v->
 			println "s3 header key:{} $k, value:{} $v"
 		}
+		
+		Thread.sleep(2000)
+
+		ConsumerTemplate consumer = camelContext.createConsumerTemplate()
+		Exchange responseExchange = consumer.receive("aws-s3://${awsConfigBean.bucketName}?amazonS3Client=#amazonS3&maxMessagesPerPoll=1&deleteAfterRead=true&prefix=${testKey}", 3000)
+		Message msg = responseExchange.getIn()
+		Map respHeaders = msg.getHeaders()
+		respHeaders.each {k,v->
+			println "respHeaders key:{} $k, value:{} $v"
+		}
+		assertNotNull(msg.body)
 	}
 }

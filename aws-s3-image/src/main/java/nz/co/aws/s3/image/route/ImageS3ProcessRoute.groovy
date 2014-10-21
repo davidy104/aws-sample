@@ -8,6 +8,9 @@ import nz.co.aws.s3.image.processor.ImageScalingProcessor
 
 import org.apache.camel.ExchangePattern
 import org.apache.camel.builder.RouteBuilder
+import org.apache.camel.builder.ThreadPoolProfileBuilder
+import org.apache.camel.model.ModelCamelContext
+import org.apache.camel.spi.ThreadPoolProfile
 import org.springframework.stereotype.Component
 
 @Component
@@ -22,13 +25,19 @@ class ImageS3ProcessRoute extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
+		ThreadPoolProfile customThreadPoolProfile = new ThreadPoolProfileBuilder(
+				"customThreadPoolProfile").poolSize(5).maxQueueSize(100)
+				.build()
+		getContext().getExecutorServiceManager().registerThreadPoolProfile(
+				customThreadPoolProfile)
+
 		from("direct:ImageS3Process")
 				.routeId('direct:ImageS3Process')
 				.setExchangePattern(ExchangePattern.InOut)
 				.setProperty('imageTransforms', simple('${body.scalingConfigs}'))
 				.process(imageMetadataRetrievingProcessor)
 				.to("mock:afterRetrieve")
-				.split(simple('${property.imageTransforms}'))
+				.split(simple('${property.imageTransforms}')).executorServiceRef("customThreadPoolProfile")
 				.to("mock:beforeScaling")
 				.process(imageScalingProcessor)
 				.to('direct:pushToEndpoint')
