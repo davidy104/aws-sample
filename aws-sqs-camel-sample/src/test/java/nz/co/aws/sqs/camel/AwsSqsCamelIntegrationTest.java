@@ -7,9 +7,6 @@ import javax.annotation.Resource;
 
 import nz.co.aws.sqs.camel.config.ApplicationContextConfig;
 
-import org.apache.camel.Endpoint;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +36,7 @@ public class AwsSqsCamelIntegrationTest {
 	@Resource
 	private AwsSqsCamelGeneralService awsSqsCamelGeneralService;
 
-	private static final String TEST_QUEUE_NAME = "davidTestQueue";
+	private static final String TEST_QUEUE_NAME = "jyqueue02";
 
 	private static final String TEST_MESSAGE = "this is a testing message";
 
@@ -57,16 +54,16 @@ public class AwsSqsCamelIntegrationTest {
 
 	}
 
-	@After
-	public void cleanUp() {
-		if (!StringUtils.isEmpty(createQueueUrl)) {
-			amazonSqs.deleteQueue(createQueueUrl);
-		}
-	}
+//	@After
+//	public void cleanUp() {
+//		if (!StringUtils.isEmpty(createQueueUrl)) {
+//			amazonSqs.deleteQueue(createQueueUrl);
+//		}
+//	}
 
 	@Test
 	public void testReceiveMessages() {
-		awsSqsCamelGeneralService.getMessagesFromQueue(TEST_QUEUE_NAME);
+		awsSqsCamelGeneralService.getMessagesFromQueue1(TEST_QUEUE_NAME);
 	}
 
 	private void sendTestMessages() throws Exception {

@@ -60,4 +60,25 @@ public class AwsSqsCamelGeneralService {
 		LOGGER.info("body:{} ", body);
 	}
 
+	public void getMessagesFromQueue1(final String queueName) {
+		LOGGER.info("getMessagesFromQueue start:{} ", queueName);
+		ConsumerTemplate consumerTemplate = camelContext
+				.createConsumerTemplate();
+
+		String endpoint = "aws-sqs://"
+				+ queueName
+				+ "?amazonSQSClient=#amazonSqs";
+
+		Exchange exchange = consumerTemplate.receive(endpoint);
+		LOGGER.info("exchange:{} ", exchange);
+		Message message = exchange.getIn();
+
+		Map<String, Object> headers = message.getHeaders();
+		for (Map.Entry<String, Object> entry : headers.entrySet()) {
+			LOGGER.info("Key : " + entry.getKey() + " Value : "
+					+ entry.getValue());
+		}
+		String body = message.getBody(String.class);
+		LOGGER.info("body:{} ", body);
+	}
 }
